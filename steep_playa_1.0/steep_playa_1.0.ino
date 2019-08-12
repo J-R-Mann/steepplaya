@@ -5,7 +5,7 @@
 
 #include <FastLED.h>
 #define LED_PIN 7
-#define COLOR_ORDER BRG
+#define COLOR_ORDER GRB
 #define LED_TYPE WS2812B
 #define NUM_LEDS 150
 #define BRIGHTNESS 60
@@ -41,6 +41,7 @@ DEFINE_GRADIENT_PALETTE( bhw2_sunsetx_gp ) {
   171, 210,107, 42,
   255, 232,229, 67};
 
+
 CRGBPalette16 myPal = bhw2_sunsetx_gp;
 
 void loop() {
@@ -48,21 +49,21 @@ void loop() {
 leds[0] = CRGB::HotPink;
 leds[2] = CRGB::HotPink;
 FastLED.show();
-delay(100);
+delay(10);
 
   fill_solid(leds, NUM_LEDS, 0xFF61A5);
   FastLED.show();
-  delay(100);
+  delay(1000);
   FastLED.clear();
 
   fill_solid(leds, NUM_LEDS, 0x3CFF57);
   FastLED.show();
-  delay(100);
+  delay(1000);
   FastLED.clear();
 
   fill_solid(leds, NUM_LEDS, 0xFFDA54);
   FastLED.show();
-  delay(100);
+  delay(1000);
   FastLED.clear();
 
 FastLED.clear();
@@ -72,8 +73,7 @@ FastLED.clear();
    leds[i-1] = 0x3CFF57;
    leds[i] = 0xFFDA54;
    FastLED.show();
-   delay(20);
-   
+   delay(100);
    FastLED.clear();
  }
  for(int i=0;i<NUM_LEDS;i++){
@@ -129,14 +129,29 @@ FastLED.clear();
       int color = colorStep;
       // Now loop though each of the LEDs and set each one to the current color
 
-      for(int x = 0; x < NUM_LEDS; x++){
-          leds[x] = CRGB(ColorFromPalette(myPal, color));
-      }
-
+//      for(int x = 0; x < NUM_LEDS; x++){
+//          leds[x] = CRGB(ColorFromPalette(myPal, color));
+//      }
+      fill_solid(leds, NUM_LEDS,CRGB(ColorFromPalette(myPal, color)));
       // Display the colors we just set on the actual LEDs
       FastLED.show();
-
-      delay(20); 
+      delay(70); 
   }
+
+  
+      for(int x = 0; x < NUM_LEDS; x++){
+      leds[x] = CRGB(255,0,0);
+      FastLED.show();
+      }
+   delay(100); 
+   
+ fill_solid(leds, NUM_LEDS,CRGB(0,255,0));
+      // Display the colors we just set on the actual LEDs
+      FastLED.show();
  
+  delay(100);  
+ fill_solid(leds, NUM_LEDS,CRGB(0,0,255));
+      // Display the colors we just set on the actual LEDs
+      FastLED.show();
+  delay(100);
 }
