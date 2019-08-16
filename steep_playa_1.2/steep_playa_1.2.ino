@@ -5,8 +5,6 @@
 
 // This code incldes my package FAST LED, defines the LED data pin, specifies my LED chip, color order, and brightness
 #include <FastLED.h>
-//#include <AnalogMultiButton.h>
-#include <Eventually.h>
 #define LED_PIN 7
 #define COLOR_ORDER GRB
 #define LED_TYPE WS2812B
@@ -23,7 +21,7 @@ CRGBPalette16 currentPalette;
 TBlendType    currentBlending;
 int effect = 1;
 
-void ICACHE_RAM_ATTR button_press() {
+void ICACHE_RAM_ATTR flashy_press() {
 //​
  // debouncer
 static unsigned long last_interrupt_time = 0;
@@ -31,6 +29,21 @@ static unsigned long last_interrupt_time = 0;
   if (interrupt_time - last_interrupt_time > 100) {
     while(digitalRead(FLASH) == LOW) {
       alert();
+    }
+  }
+  last_interrupt_time = interrupt_time; 
+}
+
+void ICACHE_RAM_ATTR changy_press() {
+//​
+ // debouncer
+static unsigned long last_interrupt_time = 0;
+  unsigned long interrupt_time = millis();
+  if (interrupt_time - last_interrupt_time > 100) {
+    while(digitalRead(MODESELECTOR) == LOW) {
+    effect++;
+    if (effect == 5) {
+      effect = 1;
     }
   }
   last_interrupt_time = interrupt_time; 
@@ -47,9 +60,10 @@ void setup() {
     currentBlending = LINEARBLEND;
     pinMode(ONOFF, INPUT);
     //pinMode(MODESELECTOR, INPUT);
-    pinMode(FLASH, INPUT);
+    //pinMode(FLASH, INPUT);
     pinMode(POTENTIOMETER, INPUT);
-    attachInterrupt(digitalPinToInterrupt(MODESELECTOR), button_press, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(MODESELECTOR), flashy_press, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(FLASH), changy_press, CHANGE);
 }
 
 // Here is where I can add some palettes to my code
@@ -70,6 +84,7 @@ DEFINE_GRADIENT_PALETTE( bhw2_sunsetx_gp ) {
   171, 210,107, 42,
   255, 232,229, 67};
 CRGBPalette16 myPal = bhw2_sunsetx_gp;
+
 void loop() {
 // put your main code here, to run repeatedly:
 switch(effect){
