@@ -8,12 +8,12 @@
 #define LED_PIN 7
 #define COLOR_ORDER GRB
 #define LED_TYPE WS2812B
-#define NUM_LEDS 549
+#define NUM_LEDS 300
 #define BRIGHTNESS 120
-#define ONOFF 5
-#define MODESELECTOR 2
-#define FLASH 3
-#define POTENTIOMETER 4
+const byte ONOFF = 5;
+const byte MODESELECTOR = 2;
+const byte FLASH = 3 ;
+const byte POTENTIOMETER = 4 ;
 
 CRGB leds[NUM_LEDS];
 
@@ -21,7 +21,12 @@ CRGBPalette16 currentPalette;
 TBlendType    currentBlending;
 int effect = 1;
 
-void ICACHE_RAM_ATTR flashy_press() {
+void alert() {
+fill_solid(leds, NUM_LEDS, CRGB::White);
+FastLED.show();
+}
+
+void flashy_press(){
 //​
  // debouncer
 static unsigned long last_interrupt_time = 0;
@@ -34,8 +39,8 @@ static unsigned long last_interrupt_time = 0;
   last_interrupt_time = interrupt_time; 
 }
 
-void ICACHE_RAM_ATTR changy_press() {
-//​
+void changy_press() {
+
  // debouncer
 static unsigned long last_interrupt_time = 0;
   unsigned long interrupt_time = millis();
@@ -48,7 +53,7 @@ static unsigned long last_interrupt_time = 0;
   }
   last_interrupt_time = interrupt_time; 
 }
-
+}
 void setup() {
   // put your setup code here, to run once:
   // give the chip a sec or 3 to boot up
@@ -95,7 +100,7 @@ switch(effect){
  case 3:
   redlightdistrict();
 }
-
+}
 // Mode 1 loop through a palette, back and forth 4ever
 void backandforth()
 {
@@ -137,28 +142,21 @@ FastLED.show();
 
 
 //pressing a button to incease effect
-void changeEffect() {
-  if (digitalRead (MODESELECTOR) == HIGH) 
-  {
-    effect++;
-    }
-  if (effect == 5) 
-  {
-    effect = 0;
-    }
-}
+//void changeEffect() {
+//  if (digitalRead (MODESELECTOR) == HIGH) 
+//  {
+//    effect++;
+//    }
+//  if (effect == 5) 
+//  {
+//    effect = 0;
+//    }
+//}
 
 //glitter effect
 void addGlitter( fract8 chanceOfGlitter) {
   if( random8() < chanceOfGlitter) {
     leds[ random16(NUM_LEDS) ] += CRGB::White;}
-}
-
-
-
-void alert() {
-fill_solid(leds, NUM_LEDS, CRGB::White);
-FastLED.show();
 }
 
 // Example of lighting individual LEDS
