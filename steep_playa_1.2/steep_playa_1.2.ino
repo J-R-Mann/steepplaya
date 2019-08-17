@@ -8,16 +8,33 @@
 #define LED_PIN 7
 #define COLOR_ORDER GRB
 #define LED_TYPE WS2812B
-#define NUM_LEDS 150
 #define BRIGHTNESS 120
+#define NUM_LEDS 150
 
 // I don't understand the difference between setting a constant and defining...
 const byte ONOFF = 5;
 const byte MODESELECTOR = 2;
 const byte FLASH = 3 ;
 const byte POT = A2 ;
-
 int mybright = BRIGHTNESS; //save analog value
+
+// for my button
+volatile long debounce_time = 0;
+volatile long current_time = 0;
+
+//clock for functions. Maybe I can use current_time?
+unsigned long previousMillis = 0;
+unsigned long currentMillis = 0;
+
+//delays for each function. number refers to state.
+long delayTime1 = 40;
+long delayTime2 = 50;
+long delayTime3 = 20;
+
+//initializing for my first function
+int colorStep = 0;
+int color = 0 ;
+int i=0;
 
 CRGB leds[NUM_LEDS];
 
@@ -26,45 +43,35 @@ CRGBPalette16 currentPalette;
 TBlendType    currentBlending;
 
 // initializing the effects I will step through.
-int effect = 4;
-
-// flash white when the flashy button is pressed
-void alert() {
-  fill_solid(leds, NUM_LEDS, CRGB::White);
-  FastLED.show();
-}
+volatile int effect = 1;
 
 // This is the function that interupts with a button and runs
 // alert()
 void flashy_press() {
-  //​
   // debouncer
-  static unsigned long last_interrupt_time = 0;
-  unsigned long interrupt_time = millis();
-  if (interrupt_time - last_interrupt_time > 100) {
-    while (digitalRead(FLASH) == HIGH) {
-      alert();
+  current_time = millis();
+  if (current_time - debounce_time > 20) {
+    if (digitalRead(FLASH) == HIGH) {
+    alert();
     }
   }
-  last_interrupt_time = interrupt_time;
+    debounce_time = current_time;
 }
 
 // This function changes a number to switch between animations
 // not sure this will actually interupt a delay
 void changy_press() {
-
   // debouncer
-  static unsigned long last_interrupt_time = 0;
-  unsigned long interrupt_time = millis();
-  if (interrupt_time - last_interrupt_time > 100) {
-    while (digitalRead(MODESELECTOR) == HIGH) {
+  current_time = millis();
+  if (current_time - debounce_time > 100) {
+    if (digitalRead(MODESELECTOR) == HIGH) {
       effect++;
       if (effect == 5) {
         effect = 1;
       }
     }
-    last_interrupt_time = interrupt_time;
   }
+    debounce_time = current_time;
 }
 void setup() {
   // put your setup code here, to run once:
@@ -78,9 +85,8 @@ void setup() {
   pinMode(ONOFF, INPUT);
   pinMode(MODESELECTOR, INPUT);
   pinMode(FLASH, INPUT);
-  //pinMode(POTENTIOMETER, INPUT);
-  attachInterrupt(digitalPinToInterrupt(2), changy_press, RISING);
-  attachInterrupt(digitalPinToInterrupt(3), flashy_press, RISING);
+  attachInterrupt(digitalPinToInterrupt(MODESELECTOR), changy_press, RISING );
+  attachInterrupt(digitalPinToInterrupt(FLASH), flashy_press, RISING);
 }
 
 // Here is where I can add some palettes to my code
@@ -105,8 +111,7 @@ CRGBPalette16 myPal = bhw2_sunsetx_gp;
 
 void loop() {
   // put your main code here, to run repeatedly:
-  switch (effect) { 
-    Serial.println(effect);
+  switch (effect) {
     case 1:
       backandforth();
       break;
@@ -124,88 +129,108 @@ void loop() {
 // Mode 1 loop through a palette, back and forth 4ever
 void backandforth()
 {
-  for ( int colorStep = 0; colorStep < 240; colorStep++ ) {
-    int color = colorStep;
-    // Now loop though each of the LEDs and set each one to the current color
-    fill_solid(leds, NUM_LEDS, CRGB(ColorFromPalette(myPal, color)));
-    // Display the colors we just set on the actual LEDs
-    FastLED.show();
-    if (effect > 1) {     // exit loop if state change occurs
-      break;
+// intialize the first while loop to ascend colors
+  currentMillis = millis();
+  previousMillis = currentMillis;
+  colorStep = 0;
+  color = 0 ;
+  while (colorStep < 240) 
+  {
+    if (effect != 1) {     // exit loop if state change occurs
+    break;
     }
-    bright();
-    delay(30);
-    changy_press();
+    bright(); 
+  currentMillis = millis();
+  if (currentMillis - previousMillis >= delayTime1)
+  {
+    colorStep++;
+    Serial.println(colorStep);
+    color = colorStep;
+    previousMillis = currentMillis;
+    }
+  else {    
+    fill_solid(leds, NUM_LEDS, CRGB(ColorFromPalette(myPal, color)));
+    FastLED.show();
+  }
   }
 
-  for ( int colorStep = 240; colorStep < 1; colorStep-- ) {
-    int color = colorStep;
-    // Now loop though each of the LEDs and set each one to the current color
-    fill_solid(leds, NUM_LEDS, CRGB(ColorFromPalette(myPal, color)));
-    // Display the colors we just set on the actual LEDs
-    FastLED.show();
-    if (effect > 1) {     // exit loop if state change occurs
-      break;
+// intialize the second while loop to descend colors
+  currentMillis = millis();
+  previousMillis = currentMillis;
+  colorStep = 240;
+  color = 240 ;
+  while (colorStep > 1) 
+  { 
+    if (effect != 1) {     // exit loop if state change occurs
+    break;
     }
-    bright();
-    delay(30);
-    changy_press();
+    bright(); 
+  currentMillis = millis();  
+  if (currentMillis - previousMillis >= delayTime1)
+  {
+    colorStep--;
+    Serial.println(colorStep);
+    int color = colorStep;
+    previousMillis = currentMillis;
+    
+    }
+  else {    
+    fill_solid(leds, NUM_LEDS, CRGB(ColorFromPalette(myPal, color)));
+    FastLED.show();
+  }
   }
 }
-
-
 //Fill with a rainbow state 2
 void rainbows()
 {
-  for (int i = 0; i < NUM_LEDS; i++) {
-    fill_rainbow(leds, i, 0, 5);
-    addGlitter(30);
-    FastLED.show();
-    if (effect > 2) {     // exit loop if state change occurs
-      break;}
-      bright();
-      delay(30);
-      changy_press();
+  currentMillis = millis();
+  previousMillis = currentMillis;
+  i=0;
+  while ( i < NUM_LEDS) {
+    if (effect != 2) {  // exit loop if state change occurs
+      break;
+    }
+    bright();
+    currentMillis = millis();
+    if (currentMillis - previousMillis >= delayTime2)
+    {
+      i++;
+      previousMillis = currentMillis;
+    }
+    else {
+      fill_rainbow(leds, i, 0, 5);
+      addGlitter(80);
+      FastLED.show();
+    }
   }
+  FastLED.clear();
 }
 
 
 //Fill with a rainbow state 3
 void rainbows2()
 {
-    fill_rainbow(leds, NUM_LEDS, 0, 5);
-    addGlitter(100);
+  unsigned long currentMillis = millis();
+  bright();
+  if (currentMillis - previousMillis >= delayTime3)
+  { 
+    fill_rainbow(leds, NUM_LEDS, 0, 10);
+    addGlitter(80);
+    previousMillis = currentMillis;
+  }
+  else {
     FastLED.show();
-      bright();
-      delay(100);
-      //flashy_press();
-      changy_press();
-    }
+  }
+}
 
 // Just all red lights state 4
 void redlightdistrict()
 {
-  fill_solid(leds, NUM_LEDS, CRGB(255, 0, 0));
-  //   if (effect > 3) {     // exit loop if state change occurs
-  //   break;
-  FastLED.show();
   bright();
-  //flashy_press();
-  changy_press();
+  fill_solid(leds, NUM_LEDS, CRGB(255, 0, 0));
+  FastLED.show();
+  //changy_press();
 }
-
-
-////pressing a button to incease effect
-//void changeEffect() {
-//  if (digitalRead (MODESELECTOR) == HIGH)
-//  {
-//    effect++;
-//    }
-//  if (effect == 5)
-//  {
-//    effect = 0;
-//    }
-//}
 
 //glitter effect
 void addGlitter( fract8 chanceOfGlitter) {
@@ -216,9 +241,18 @@ void addGlitter( fract8 chanceOfGlitter) {
 
 void bright() {
   mybright = analogRead(POT); //Read and save analog value from potentiometer
-  mybright = map(mybright, 0, 1023, 0, BRIGHTNESS); //Map value 0-1023 to 0-255
+  mybright = map(mybright, 0, 1023, 10, BRIGHTNESS); //Map value 0-1023 to 10-brightness
   FastLED.setBrightness(mybright);
 }
+
+
+// flash white when the flashy button is pressed
+void alert() {
+  fill_solid(leds, NUM_LEDS, CRGB(255, 255, 255));
+  FastLED.show();
+
+
+///////////////SOME EXAMPLES ////////////////////////////////////////////////////  
 // Example of lighting individual LEDS
 //  leds[0] = CRGB::HotPink;
 //  leds[2] = CRGB::HotPink;
@@ -249,3 +283,4 @@ void bright() {
 //   FastLED.show();
 //   delay(20);
 // }
+}
