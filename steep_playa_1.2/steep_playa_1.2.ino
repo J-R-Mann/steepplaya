@@ -4,6 +4,7 @@
 //In total their are closer to 1000 LEDS but my arduino does not have the memory to power that many so I am running some strips in parellel
 
 // This code incldes my package FAST LED, defines the LED data pin, specifies my LED chip, color order, and brightness
+#define FASTLED_ALLOW_INTERRUPTS 0
 #include <FastLED.h>
 #define LED_PIN 7
 #define COLOR_ORDER GRB
@@ -51,9 +52,10 @@ void flashy_press() {
   // debouncer
   current_time = millis();
   if (current_time - debounce_time > 20) {
-    if (digitalRead(FLASH) == HIGH) {
+    while (digitalRead(FLASH) == HIGH) {
+    Serial.println("x");
     alert();
-    }
+   }
   }
     debounce_time = current_time;
 }
@@ -63,13 +65,11 @@ void flashy_press() {
 void changy_press() {
   // debouncer
   current_time = millis();
-  if (current_time - debounce_time > 100) {
-    if (digitalRead(MODESELECTOR) == HIGH) {
+  if (current_time - debounce_time > 200) {
       effect++;
       if (effect == 5) {
         effect = 1;
       }
-    }
   }
     debounce_time = current_time;
 }
@@ -86,7 +86,7 @@ void setup() {
   pinMode(MODESELECTOR, INPUT);
   pinMode(FLASH, INPUT);
   attachInterrupt(digitalPinToInterrupt(MODESELECTOR), changy_press, RISING );
-  attachInterrupt(digitalPinToInterrupt(FLASH), flashy_press, RISING);
+  attachInterrupt(digitalPinToInterrupt(FLASH), flashy_press, CHANGE);
 }
 
 // Here is where I can add some palettes to my code
@@ -250,7 +250,7 @@ void bright() {
 void alert() {
   fill_solid(leds, NUM_LEDS, CRGB(255, 255, 255));
   FastLED.show();
-
+}
 
 ///////////////SOME EXAMPLES ////////////////////////////////////////////////////  
 // Example of lighting individual LEDS
@@ -283,4 +283,3 @@ void alert() {
 //   FastLED.show();
 //   delay(20);
 // }
-}
