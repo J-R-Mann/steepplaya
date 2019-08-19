@@ -214,22 +214,32 @@ void soundcheck ()
    }
    peakToPeak = signalMax - signalMin;  // max - min = peak-peak amplitude
    double volts = (peakToPeak * 5.0) / 1024;  // convert to volts
-   mybright = map(volts, 0, 4, BRIGHTNESS/5, BRIGHTNESS);
+   volts = volts *100;
+   mybright = map(volts, 0, 250, 20, BRIGHTNESS);
+   //Serial.println(volts);
    Serial.println(mybright);
    strip.setBrightness(mybright);
    if (effect != 5) {     // exit loop if state change occurs
    break;
    }
-   if(mybright > 60)
+   if(mybright > 140)
    {
+   strip.fill(strip.Color(255, 255, 255));
+   strip.show();
+   }
+   else if (mybright > 100) {
    strip.fill(strip.Color(255, 0, 0));
+   strip.show();
+   }
+   else if(mybright > 75){
+   strip.fill(strip.Color(125, 0, 255));
    strip.show();
    }
    else {
    strip.fill(strip.Color(255, 0, 255));
    strip.show();
    }
-  }
+}
 }
 
 //glitter effect with how many glitters are we talking here
